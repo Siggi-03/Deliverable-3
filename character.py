@@ -2,11 +2,14 @@
 # Based on game_simulator_v1.py by Turid Torheim, NMBU, 2026
 # Extended for Deliverable 3, INF201
 
+from items import Weapon
+
 
 class Character:
     """Represents a character in the RPG"""
 
-    def __init__(self, name: str, hp_max: int = 100, damage: int = 10) -> None:
+    def __init__(self, name: str, hp_max: int = 100, damage: int = 10,
+                 weapon: Weapon | None = None) -> None:
         """
         Initialise the Character
 
@@ -14,11 +17,13 @@ class Character:
             name (str): The name of the character.
             hp_max (int): Max hit points (default = 100)
             damage (int): Base damage dealt when character attacks (default = 10)
+            weapon (Weapon | None): Optional equipped weapon (default = None)
         """
         self.name = name
         self._hp = hp_max  # _hp indicates a private attribute
         self.hp_max = hp_max
         self.damage = damage
+        self.weapon = weapon
 
     # ---------- Properties ----------
     @property
@@ -59,6 +64,12 @@ class Character:
         self._hp = min(self._hp + amount, self.hp_max)
         return self._hp - old_hp
 
+    def roll_attack_damage(self) -> int:
+        """Weapon damage if a weapon is equipped, otherwise base damage."""
+        if self.weapon is not None:
+            return self.weapon.roll_damage()
+        return self.damage
+
     def attack(self, target: "Character") -> int:
         """
         Attack target: the target's take_damage() method handles its own HP.
@@ -66,7 +77,8 @@ class Character:
         Returns:
             int: The damage actually taken by the target
         """
-        return target.take_damage(self.damage)
+        damage = self.roll_attack_damage()
+        return target.take_damage(damage)
 
     def introduce(self) -> None:
         """Prints a string that introduces the character"""
@@ -74,9 +86,11 @@ class Character:
 
     def __repr__(self) -> str:
         """Representation of character object"""
-        return f"<{type(self).__name__} name={self.name} hp={self.hp} damage={self.damage}>"
+        return (f"<{type(self).__name__} name={self.name} hp={self.hp} "
+                f"damage={self.damage} weapon={self.weapon}>")
 
     def __str__(self) -> str:
         """String representation of character object"""
+        weapon_text = f", wielding {self.weapon.name}" if self.weapon else ""
         return (f"{type(self).__name__}: {self.name} with {self.hp}/{self.hp_max} HP "
-                f"and {self.damage} base damage")
+                f"and {self.damage} base damage{weapon_text}")
